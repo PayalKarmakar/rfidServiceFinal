@@ -1,0 +1,488 @@
+﻿<Window x:Class="RfidManagementSystem.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="RFID Service"
+        WindowState="Maximized"
+        WindowStartupLocation="CenterScreen"
+        Background="#F5F7FB">
+
+    <Grid Margin="35">
+
+        <Grid.RowDefinitions>
+
+            <!-- HEADER -->
+            <RowDefinition Height="Auto"/>
+
+            <!-- SPACE -->
+            <RowDefinition Height="22"/>
+
+            <!-- CONNECTED / DISCONNECTED -->
+            <RowDefinition Height="190"/>
+
+            <!-- SPACE -->
+            <RowDefinition Height="20"/>
+
+            <!-- ALERTS / ERRORS -->
+            <RowDefinition Height="190"/>
+
+            <!-- SPACE -->
+            <RowDefinition Height="20"/>
+
+            <!-- LATEST RFID DATA -->
+            <RowDefinition Height="*"/>
+
+            <!-- FOOTER -->
+            <RowDefinition Height="Auto"/>
+
+        </Grid.RowDefinitions>
+
+
+        <!-- ========================================================= -->
+        <!-- HEADER -->
+        <!-- ========================================================= -->
+
+        <Grid Grid.Row="0">
+
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+
+            <StackPanel>
+
+                <TextBlock Text="RFID SERVICE"
+                           FontSize="32"
+                           FontWeight="Bold"
+                           Foreground="#1E293B"/>
+
+                <TextBlock Text="RFID reader communication and transaction processing service"
+                           FontSize="14"
+                           Foreground="#64748B"
+                           Margin="0,6,0,0"/>
+
+            </StackPanel>
+
+
+            <!-- SERVICE STATUS -->
+
+            <Border Grid.Column="1"
+                    Background="#DCFCE7"
+                    CornerRadius="22"
+                    Padding="20,10"
+                    VerticalAlignment="Top">
+
+                <TextBlock Text="● SERVICE RUNNING"
+                           Foreground="#15803D"
+                           FontWeight="SemiBold"
+                           FontSize="14"/>
+
+            </Border>
+
+        </Grid>
+
+
+        <!-- ========================================================= -->
+        <!-- CONNECTED / DISCONNECTED READERS -->
+        <!-- ========================================================= -->
+
+        <Grid Grid.Row="2">
+
+            <Grid.ColumnDefinitions>
+
+                <ColumnDefinition Width="*"/>
+
+                <ColumnDefinition Width="25"/>
+
+                <ColumnDefinition Width="*"/>
+
+            </Grid.ColumnDefinitions>
+
+
+            <!-- ===================================================== -->
+            <!-- CONNECTED READERS -->
+            <!-- ===================================================== -->
+
+            <Border Grid.Column="0"
+                    Background="White"
+                    CornerRadius="14"
+                    Padding="22">
+
+                <Grid>
+
+                    <Grid.RowDefinitions>
+
+                        <RowDefinition Height="Auto"/>
+
+                        <RowDefinition Height="Auto"/>
+
+                        <RowDefinition Height="*"/>
+
+                    </Grid.RowDefinitions>
+
+
+                    <TextBlock Text="CONNECTED READERS"
+                               FontSize="18"
+                               FontWeight="SemiBold"
+                               Foreground="#1E293B"/>
+
+
+                    <TextBlock Grid.Row="1"
+                               Text="● Online and connected RFID readers"
+                               FontSize="12"
+                               Foreground="#15803D"
+                               Margin="0,7,0,0"/>
+
+
+                    <!-- NO SCROLLER -->
+
+                    <Border Grid.Row="2"
+                            Background="#F0FDF4"
+                            CornerRadius="10"
+                            Margin="0,14,0,0"
+                            Padding="14">
+
+                        <TextBlock x:Name="txtConnectedReaders"
+                                   Text="No readers connected."
+                                   FontSize="14"
+                                   FontWeight="SemiBold"
+                                   Foreground="#166534"
+                                   TextWrapping="Wrap"
+                                   VerticalAlignment="Top"/>
+
+                    </Border>
+
+                </Grid>
+
+            </Border>
+
+
+            <!-- ===================================================== -->
+            <!-- DISCONNECTED READERS -->
+            <!-- ===================================================== -->
+
+            <Border Grid.Column="2"
+                    Background="White"
+                    CornerRadius="14"
+                    Padding="22">
+
+                <Grid>
+
+                    <Grid.RowDefinitions>
+
+                        <RowDefinition Height="Auto"/>
+
+                        <RowDefinition Height="Auto"/>
+
+                        <RowDefinition Height="*"/>
+
+                    </Grid.RowDefinitions>
+
+
+                    <TextBlock Text="DISCONNECTED READERS"
+                               FontSize="18"
+                               FontWeight="SemiBold"
+                               Foreground="#1E293B"/>
+
+
+                    <TextBlock Grid.Row="1"
+                               Text="● Readers waiting for connection"
+                               FontSize="12"
+                               Foreground="#DC2626"
+                               Margin="0,7,0,0"/>
+
+
+                    <!-- NO SCROLLER -->
+
+                    <Border Grid.Row="2"
+                            Background="#FEF2F2"
+                            CornerRadius="10"
+                            Margin="0,14,0,0"
+                            Padding="14">
+
+                        <TextBlock x:Name="txtDisconnectedReaders"
+                                   Text="All readers are connected."
+                                   FontSize="14"
+                                   FontWeight="SemiBold"
+                                   Foreground="#B91C1C"
+                                   TextWrapping="Wrap"
+                                   VerticalAlignment="Top"/>
+
+                    </Border>
+
+                </Grid>
+
+            </Border>
+
+        </Grid>
+
+
+        <!-- ========================================================= -->
+        <!-- ALERTS / ERRORS -->
+        <!-- ========================================================= -->
+
+        <Grid Grid.Row="4">
+
+            <Grid.ColumnDefinitions>
+
+                <ColumnDefinition Width="*"/>
+
+                <ColumnDefinition Width="25"/>
+
+                <ColumnDefinition Width="*"/>
+
+            </Grid.ColumnDefinitions>
+
+
+            <!-- ===================================================== -->
+            <!-- ALERTS -->
+            <!-- ===================================================== -->
+
+            <Border Grid.Column="0"
+                    Background="White"
+                    CornerRadius="14"
+                    Padding="22">
+
+                <Grid>
+
+                    <Grid.RowDefinitions>
+
+                        <RowDefinition Height="Auto"/>
+
+                        <RowDefinition Height="Auto"/>
+
+                        <RowDefinition Height="*"/>
+
+                    </Grid.RowDefinitions>
+
+
+                    <TextBlock Text="ALERTS"
+                               FontSize="18"
+                               FontWeight="SemiBold"
+                               Foreground="#1E293B"/>
+
+
+                    <TextBlock Grid.Row="1"
+                               Text="● Important RFID activity and warnings"
+                               FontSize="12"
+                               Foreground="#D97706"
+                               Margin="0,7,0,0"/>
+
+
+                    <!-- NO SCROLLER -->
+
+                    <Border Grid.Row="2"
+                            Background="#FFFBEB"
+                            CornerRadius="10"
+                            Margin="0,14,0,0"
+                            Padding="14">
+
+                        <TextBlock x:Name="txtAlerts"
+                                   Text="No alerts."
+                                   FontSize="14"
+                                   FontWeight="SemiBold"
+                                   Foreground="#92400E"
+                                   TextWrapping="Wrap"
+                                   VerticalAlignment="Top"/>
+
+                    </Border>
+
+                </Grid>
+
+            </Border>
+
+
+            <!-- ===================================================== -->
+            <!-- ERRORS -->
+            <!-- ===================================================== -->
+
+            <Border Grid.Column="2"
+                    Background="White"
+                    CornerRadius="14"
+                    Padding="22">
+
+                <Grid>
+
+                    <Grid.RowDefinitions>
+
+                        <RowDefinition Height="Auto"/>
+
+                        <RowDefinition Height="Auto"/>
+
+                        <RowDefinition Height="*"/>
+
+                    </Grid.RowDefinitions>
+
+
+                    <TextBlock Text="ERRORS"
+                               FontSize="18"
+                               FontWeight="SemiBold"
+                               Foreground="#1E293B"/>
+
+
+                    <TextBlock Grid.Row="1"
+                               Text="● System and RFID processing errors"
+                               FontSize="12"
+                               Foreground="#DC2626"
+                               Margin="0,7,0,0"/>
+
+
+                    <!-- NO SCROLLER -->
+
+                    <Border Grid.Row="2"
+                            Background="#FEF2F2"
+                            CornerRadius="10"
+                            Margin="0,14,0,0"
+                            Padding="14">
+
+                        <TextBlock x:Name="txtErrors"
+                                   Text="No errors."
+                                   FontSize="14"
+                                   FontWeight="SemiBold"
+                                   Foreground="#B91C1C"
+                                   TextWrapping="Wrap"
+                                   VerticalAlignment="Top"/>
+
+                    </Border>
+
+                </Grid>
+
+            </Border>
+
+        </Grid>
+
+
+        <!-- ========================================================= -->
+        <!-- LATEST RFID DATA -->
+        <!-- ========================================================= -->
+
+        <Border Grid.Row="6"
+                Background="White"
+                CornerRadius="14"
+                Padding="25">
+
+            <Grid>
+
+                <Grid.RowDefinitions>
+
+                    <RowDefinition Height="Auto"/>
+
+                    <RowDefinition Height="Auto"/>
+
+                    <RowDefinition Height="15"/>
+
+                    <RowDefinition Height="*"/>
+
+                </Grid.RowDefinitions>
+
+
+                <!-- HEADER -->
+
+                <Grid Grid.Row="0">
+
+                    <Grid.ColumnDefinitions>
+
+                        <ColumnDefinition Width="*"/>
+
+                        <ColumnDefinition Width="Auto"/>
+
+                    </Grid.ColumnDefinitions>
+
+
+                    <StackPanel>
+
+                        <TextBlock Text="LATEST RFID SCAN"
+                                   FontSize="22"
+                                   FontWeight="Bold"
+                                   Foreground="#0F172A"/>
+
+                        <TextBlock Text="Latest RFID card scan and transaction result"
+                                   FontSize="13"
+                                   Foreground="#64748B"
+                                   Margin="0,5,0,0"/>
+
+                    </StackPanel>
+
+
+                    <!-- LIVE INDICATOR -->
+
+                    <Border Grid.Column="1"
+                            Background="#EFF6FF"
+                            CornerRadius="18"
+                            Padding="15,7"
+                            VerticalAlignment="Center">
+
+                        <TextBlock Text="● LIVE"
+                                   FontSize="12"
+                                   FontWeight="Bold"
+                                   Foreground="#2563EB"/>
+
+                    </Border>
+
+                </Grid>
+
+
+                <!-- LATEST INFORMATION -->
+
+                <Border Grid.Row="3"
+                        Background="#F8FAFC"
+                        BorderBrush="#E2E8F0"
+                        BorderThickness="1"
+                        CornerRadius="10"
+                        Padding="22">
+
+                    <!-- NO SCROLLER -->
+
+                    <TextBlock x:Name="txtReceivedData"
+                               Text="Waiting for RFID reader data..."
+                               FontFamily="Consolas"
+                               FontSize="17"
+                               FontWeight="SemiBold"
+                               Foreground="#334155"
+                               TextWrapping="Wrap"
+                               VerticalAlignment="Top"/>
+
+                </Border>
+
+            </Grid>
+
+        </Border>
+
+
+        <!-- ========================================================= -->
+        <!-- FOOTER -->
+        <!-- ========================================================= -->
+
+        <StackPanel Grid.Row="7"
+                    Margin="0,15,0,0"
+                    HorizontalAlignment="Center">
+
+            <TextBlock Text="© SRP Innovations"
+                       HorizontalAlignment="Center"
+                       Foreground="#94A3B8"
+                       FontSize="12"/>
+
+
+            <TextBlock HorizontalAlignment="Center"
+                       Margin="0,5,0,0"
+                       Foreground="#64748B"
+                       FontSize="12">
+
+                <Run Text="Designed &amp; Developed by "/>
+
+                <Hyperlink NavigateUri="https://codeinq.com/"
+                           RequestNavigate="CodeInQHyperlink_RequestNavigate">
+
+                    <Run Text="CodeInQ"
+                         Foreground="#2563EB"
+                         TextDecorations="Underline"/>
+
+                </Hyperlink>
+
+            </TextBlock>
+
+        </StackPanel>
+
+    </Grid>
+
+</Window>

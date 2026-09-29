@@ -13,3 +13,9 @@ obj/
 
 # Logs
 *.log
+
+# Deployment / temporary files
+*_deploy_temp_*/
+
+# OpenCV native binaries
+OpenCvSharpExtern.dll

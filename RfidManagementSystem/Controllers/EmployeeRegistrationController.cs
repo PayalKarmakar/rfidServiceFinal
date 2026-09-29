@@ -42,18 +42,14 @@ namespace RfidManagementSystem.Controllers
         // ==========================================
 
         [HttpPost("scan")]
-        public async Task<IActionResult> Start(
-            CancellationToken cancellationToken)
+        public async Task<IActionResult> Start(CancellationToken cancellationToken)
         {
             try
             {
                 // Wait until employee registration
                 // RFID reader scans a card
 
-                string cardUid =await _employeeRegistrationService
-                        .WaitForCardAsync(
-                            cancellationToken
-                        );
+                string cardUid =await _employeeRegistrationService.WaitForCardAsync(cancellationToken);
 
                 return Ok(
                     new

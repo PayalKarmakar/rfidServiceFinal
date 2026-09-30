@@ -162,91 +162,263 @@ public class RfidService
         _ = InventoryLoopAsync(reader, client, cts.Token);
     }
 
-    private async Task InventoryLoopAsync(MasterRfidReader reader,RfidTcpClient client, CancellationToken cancellationToken)
+    private async Task InventoryLoopAsync(MasterRfidReader reader,RfidTcpClient client,CancellationToken cancellationToken)
     {
         while (!cancellationToken.IsCancellationRequested)
         {
-            if (!client.IsConnected)
+            try
             {
-                int maxRetries = _configurationService.GetReaderConnectionRetryCount();
-                int retryIntervalSeconds =  _configurationService.GetReaderConnectionRetryIntervalSeconds();
-                string lastError = "Reader is not connected.";
+                // =====================================================
+                // CHECK CONNECTION
+                // =====================================================
 
-                bool connected = false;
-                for (int retry = 1; retry <= maxRetries;retry++)
+                if (!client.IsConnected)
                 {
-                    try
-                    {
-                        // Try connecting again
-                        await client.ConnectAsync(
-                            reader.IpAddress,
-                            reader.Port,
-                            cancellationToken);
+                    int maxRetries = _configurationService.GetReaderConnectionRetryCount();
 
-                        if (client.IsConnected)
+                    int retryIntervalSeconds = _configurationService.GetReaderConnectionRetryIntervalSeconds();
+
+                    bool connected = false;
+
+                    for (int retry = 1; retry <= maxRetries;retry++)
+                    {
+                        try
                         {
-                            connected = true;
-                            break;
+                            await client.ConnectAsync(reader.IpAddress,reader.Port,cancellationToken);
+
+                            if (client.IsConnected)
+                            {
+                                connected = true;
+                                break;
+                            }
+                        }
+                        catch
+                        {
+                            // Retry below
+                        }
+
+                        if (retry < maxRetries)
+                        {
+                            await Task.Delay(TimeSpan.FromSeconds(retryIntervalSeconds),cancellationToken);
                         }
                     }
-                    catch (Exception ex)
-                    {
-                        lastError = ex.Message;
-                    }
 
-                    if (retry < maxRetries)
+                    if (!connected)
                     {
+                        await _systemLogService.LogAsync(
+                            "RFID_SERVICE",
+                            "ERROR",
+                            "RFID_READER_NOT_CONNECTED",
+                            $"Reader '{reader.ReaderName}' " +
+                            $"could not reconnect after " +
+                            $"{maxRetries} retries.",
+                            reader.IpAddress,
+                            reader.Port);
+
                         await Task.Delay(
                             TimeSpan.FromSeconds(
                                 retryIntervalSeconds),
                             cancellationToken);
+
+                        continue;
                     }
+
+                    continue;
                 }
 
-                if (!connected)
+
+                // =====================================================
+                // MIFARE INVENTORY COMMAND
+                // =====================================================
+
+                byte[] command =
                 {
-                    await _systemLogService.LogAsync(
-                        "RFID_SERVICE",
-                        "ERROR",
-                        "RFID_READER_NOT_CONNECTED",
-                        $"Reader: {reader.ReaderName} " +
-                        $"(IP: {reader.IpAddress}, " +
-                        $"Port: {reader.Port}) " +
-                        $"could not connect after {maxRetries} " +
-                        $"retries. Error: {lastError}");
+                0x03,
+                0x2F,
+                0x01
+            };
 
-                    break;
+
+                // =====================================================
+                // SEND COMMAND
+                // =====================================================
+
+                byte[]? response =
+                    await client.SendCommandAsync(
+                        command,
+                        cancellationToken);
+
+
+                // =====================================================
+                // NO RESPONSE
+                // =====================================================
+
+                if (response == null)
+                {
+                    await Task.Delay(
+                        TimeSpan.FromSeconds(
+                            _configurationService
+                                .GetInventoryIntervalSeconds()),
+                        cancellationToken);
+
+                    continue;
                 }
-                continue;
-            }
 
-            byte[] command =
-            {
-            0x03,
-            0x2F,
-            0x01
-        };
 
-            byte[]? response = await client.SendCommandAsync(command,cancellationToken);
+                // =====================================================
+                // PROCESS RESPONSE
+                // =====================================================
 
-            if (response != null)
-            {
-                bool cardFound = await ProcessInventoryResponseAsync(reader,response);
+                bool cardFound =
+                    await ProcessInventoryResponseAsync(
+                        reader,
+                        response);
+
+
+                // =====================================================
+                // CARD FOUND
+                // =====================================================
 
                 if (cardFound)
                 {
-                    int cooldownSeconds = _configurationService.GetEntryExitCooldownSeconds();
+                    int cooldownSeconds =
+                        _configurationService
+                            .GetEntryExitCooldownSeconds();
 
-                    await Task.Delay(TimeSpan.FromSeconds(cooldownSeconds),cancellationToken);
+                    await Task.Delay(
+                        TimeSpan.FromSeconds(
+                            cooldownSeconds),
+                        cancellationToken);
+
                     continue;
                 }
+
+
+                // =====================================================
+                // NO CARD
+                // =====================================================
+
+                int inventoryIntervalSeconds =
+                    _configurationService
+                        .GetInventoryIntervalSeconds();
+
+                await Task.Delay(
+                    TimeSpan.FromSeconds(
+                        inventoryIntervalSeconds),
+                    cancellationToken);
             }
+            catch (OperationCanceledException)
+            {
+                if (cancellationToken.IsCancellationRequested)
+                    break;
+            }
+            catch (Exception ex)
+            {
+                // IMPORTANT:
+                // Never allow inventory loop to die silently.
 
-            int inventoryIntervalSeconds =_configurationService.GetInventoryIntervalSeconds();
+                await _systemLogService.LogAsync(
+                    "RFID_SERVICE",
+                    "ERROR",
+                    "RFID_INVENTORY_LOOP_ERROR",
+                    $"Inventory loop error for reader " +
+                    $"'{reader.ReaderName}': {ex.Message}",
+                    reader.IpAddress,
+                    reader.Port);
 
-            await Task.Delay(TimeSpan.FromSeconds(inventoryIntervalSeconds), cancellationToken);
+                // Give the reader/client a moment before retrying.
+                await Task.Delay(
+                    TimeSpan.FromSeconds(1),
+                    cancellationToken);
+            }
         }
     }
+
+    //private async Task InventoryLoopAsync(MasterRfidReader reader,RfidTcpClient client, CancellationToken cancellationToken)
+    //{
+    //    while (!cancellationToken.IsCancellationRequested)
+    //    {
+    //        if (!client.IsConnected)
+    //        {
+    //            int maxRetries = _configurationService.GetReaderConnectionRetryCount();
+    //            int retryIntervalSeconds =  _configurationService.GetReaderConnectionRetryIntervalSeconds();
+    //            string lastError = "Reader is not connected.";
+
+    //            bool connected = false;
+    //            for (int retry = 1; retry <= maxRetries;retry++)
+    //            {
+    //                try
+    //                {
+    //                    // Try connecting again
+    //                    await client.ConnectAsync(
+    //                        reader.IpAddress,
+    //                        reader.Port,
+    //                        cancellationToken);
+
+    //                    if (client.IsConnected)
+    //                    {
+    //                        connected = true;
+    //                        break;
+    //                    }
+    //                }
+    //                catch (Exception ex)
+    //                {
+    //                    lastError = ex.Message;
+    //                }
+
+    //                if (retry < maxRetries)
+    //                {
+    //                    await Task.Delay(
+    //                        TimeSpan.FromSeconds(
+    //                            retryIntervalSeconds),
+    //                        cancellationToken);
+    //                }
+    //            }
+
+    //            if (!connected)
+    //            {
+    //                await _systemLogService.LogAsync(
+    //                    "RFID_SERVICE",
+    //                    "ERROR",
+    //                    "RFID_READER_NOT_CONNECTED",
+    //                    $"Reader: {reader.ReaderName} " +
+    //                    $"(IP: {reader.IpAddress}, " +
+    //                    $"Port: {reader.Port}) " +
+    //                    $"could not connect after {maxRetries} " +
+    //                    $"retries. Error: {lastError}");
+
+    //                break;
+    //            }
+    //            continue;
+    //        }
+
+    //        byte[] command =
+    //            {
+    //            0x03,
+    //            0x2F,
+    //            0x01
+    //        };
+
+    //        byte[]? response = await client.SendCommandAsync(command,cancellationToken);
+
+    //        if (response != null)
+    //        {
+    //            bool cardFound = await ProcessInventoryResponseAsync(reader,response);
+
+    //            if (cardFound)
+    //            {
+    //                int cooldownSeconds = _configurationService.GetEntryExitCooldownSeconds();
+
+    //                await Task.Delay(TimeSpan.FromSeconds(cooldownSeconds),cancellationToken);
+    //                continue;
+    //            }
+    //        }
+
+    //        int inventoryIntervalSeconds =_configurationService.GetInventoryIntervalSeconds();
+
+    //        await Task.Delay(TimeSpan.FromSeconds(inventoryIntervalSeconds), cancellationToken);
+    //    }
+    //}
 
     private async Task<bool> ProcessInventoryResponseAsync(MasterRfidReader reader, byte[] data)
     {
@@ -307,13 +479,13 @@ public class RfidService
             if (data[4] != 0x00 ||
                 data[5] != 0x00)
             {
-                await _systemLogService.LogAsync(
-                    "RFID_SERVICE",
-                    "INFO",
-                    "RFID_NO_CARD",
-                    $"No card detected. RAW HEX: {rawHex}",
-                    reader.IpAddress,
-                    reader.Port);
+                //await _systemLogService.LogAsync(
+                //    "RFID_SERVICE",
+                //    "INFO",
+                //    "RFID_NO_CARD",
+                //    $"No card detected. RAW HEX: {rawHex}",
+                //    reader.IpAddress,
+                //    reader.Port);
 
                 return false;
             }

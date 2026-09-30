@@ -92,12 +92,9 @@ public class RfidTcpClient
     // SEND COMMAND
     // =========================================================
 
-    public async Task<byte[]?> SendCommandAsync(
-        byte[] command,
-        CancellationToken cancellationToken = default)
+    public async Task<byte[]?> SendCommandAsync(byte[] command,CancellationToken cancellationToken = default)
     {
-        if (!IsConnected ||
-            _stream == null)
+        if (!IsConnected ||_stream == null)
         {
             StatusChanged?.Invoke(
                 $"RFID_READER_NOT_CONNECTED|" +
@@ -107,8 +104,7 @@ public class RfidTcpClient
             return null;
         }
 
-        await _commandLock.WaitAsync(
-            cancellationToken);
+        await _commandLock.WaitAsync(cancellationToken);
 
         try
         {
@@ -116,8 +112,7 @@ public class RfidTcpClient
             // ADD CRC
             // =====================================================
 
-            byte[] packet =
-                BuildPacketWithCrc(command);
+            byte[] packet = BuildPacketWithCrc(command);
 
 
             // =====================================================
@@ -146,9 +141,15 @@ public class RfidTcpClient
             // READ RESPONSE
             // =====================================================
 
-            byte[] response =
-                await ReadResponseAsync(
-                    cancellationToken);
+            byte[] response = await ReadResponseAsync(cancellationToken);
+            // =========================================================
+            // NO RESPONSE
+            // =========================================================
+
+            if (response == null)
+            {
+                return null;
+            }
 
 
             // =====================================================
